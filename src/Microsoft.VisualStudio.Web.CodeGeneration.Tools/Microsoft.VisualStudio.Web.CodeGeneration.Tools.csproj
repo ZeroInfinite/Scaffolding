@@ -13,32 +13,46 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Shared\**\*.cs" />
-    <Compile Include="..\Microsoft.Extensions.ProjectModel.Abstractions.Sources\**\*.cs" />
-    <Compile Include="..\Microsoft.Extensions.ProjectModel.MsBuild.Sources\**\*.cs" />
+    <Compile Include="..\Shared\**\*.cs">
+      <Link>Shared\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Extensions.ProjectModel.MsBuild.Sources\**\*.cs">
+      <Link>MsBuildSources\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
     <EmbeddedResource Include="compiler\resources\**\*" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Runtime" Version="15.1.548" />
-    <PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.0" />
-    <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.0.1" />
-    <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.0.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="1.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="NuGet.Frameworks" Version="3.5.0" />
+    <ProjectReference Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Contracts\Microsoft.VisualStudio.Web.CodeGeneration.Contracts.csproj" />
+    <PackageReference Include="Microsoft.Build.Runtime" Version="$(MicrosoftBuildVersion)" />
+    <PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="$(DotNetInternalAbstractionsVersion)" />
+    <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="$(CommandLineUtilsVersion)" />
+    <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="$(PlatformAbstractionsVersion)" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="$(FileProvidersVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonSoftVersion)" />
+    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetFrameworksLegacyVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild\Target\build\Microsoft.VisualStudio.Web.CodeGeneration.Tools.targets" Pack="true"
-          PackagePath="build\netstandard1.0\Microsoft.VisualStudio.Web.CodeGeneration.Tools.targets" />
-    <None Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild\Target\buildMultiTargeting\Microsoft.VisualStudio.Web.CodeGeneration.Tools.targets" Pack="true"
-          PackagePath="buildMultiTargeting\Microsoft.VisualStudio.Web.CodeGeneration.Tools.targets" />
-    <None Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild\bin\$(Configuration)\netstandard1.6\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild.dll" Pack="true"
-          PackagePath="toolassets\netcoreapp1.0\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild.dll" />
-    <None Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild\bin\$(Configuration)\net46\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild.dll" Pack="true"
-          PackagePath="toolassets\net46\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild.dll" />
-    <None Include="prefercliruntime" Pack="true"
-          PackagePath="prefercliruntime" />
+    <None Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild\Target\build\Microsoft.VisualStudio.Web.CodeGeneration.Tools.targets" Pack="true" PackagePath="build\netstandard1.0\Microsoft.VisualStudio.Web.CodeGeneration.Tools.targets" />
+    <None Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild\Target\buildMultiTargeting\Microsoft.VisualStudio.Web.CodeGeneration.Tools.targets" Pack="true" PackagePath="buildMultiTargeting\Microsoft.VisualStudio.Web.CodeGeneration.Tools.targets" />
+    <None Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild\bin\$(Configuration)\netstandard1.6\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild.dll" Pack="true" PackagePath="toolassets\netcoreapp1.0\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild.dll" />
+    <None Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild\bin\$(Configuration)\net46\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild.dll" Pack="true" PackagePath="toolassets\net46\Microsoft.VisualStudio.Web.CodeGeneration.Msbuild.dll" />
+    <None Include="prefercliruntime" Pack="true" PackagePath="prefercliruntime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

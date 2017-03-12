@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.ProjectModel;
+using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.ProjectModel;
 using Microsoft.VisualStudio.Web.CodeGeneration.DotNet;
 using Microsoft.VisualStudio.Web.CodeGeneration;
 
@@ -106,7 +106,7 @@ namespace Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Dependency
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Failed to generate readme at {outputPath}", ex);
+                throw new InvalidOperationException(string.Format(MessageStrings.ReadmeGenerationFailed, outputPath), ex);
             }
         }
 

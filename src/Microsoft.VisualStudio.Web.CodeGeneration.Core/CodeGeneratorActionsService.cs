@@ -21,13 +21,6 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration
 
         public CodeGeneratorActionsService(
             ITemplating templatingService,
-            IFilesLocator filesLocator)
-            : this(templatingService, filesLocator, new DefaultFileSystem())
-        {
-        }
-
-        internal CodeGeneratorActionsService(
-            ITemplating templatingService,
             IFilesLocator filesLocator,
             IFileSystem fileSystem)
         {

@@ -16,7 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Design.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.Extensions.ProjectModel;
+using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.ProjectModel;
 using Microsoft.VisualStudio.Web.CodeGeneration.DotNet;
 using Microsoft.VisualStudio.Web.CodeGeneration.Utils;
 
@@ -32,10 +32,10 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
         private const string EFSqlServerPackageName = "Microsoft.EntityFrameworkCore.SqlServer";
-        private const string EFSqlServerPackageVersion = "7.0.0-*";
         private const string NewDbContextFolderName = "Data";
         private readonly Workspace _workspace;
         private readonly IProjectContext _projectContext;
+        private readonly IFileSystem _fileSystem;
 
 
         public EntityFrameworkServices(
@@ -47,6 +47,7 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
             IPackageInstaller packageInstaller,
             IServiceProvider serviceProvider,
             Workspace workspace,
+            IFileSystem fileSystem,
             ILogger logger)
         {
             if (projectContext == null)
@@ -94,6 +95,11 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
                 throw new ArgumentNullException(nameof(workspace));
             }
 
+            if(fileSystem == null)
+            {
+                throw new ArgumentNullException(nameof(fileSystem));
+            }
+
             _projectContext = projectContext;
             _applicationInfo = applicationInfo;
             _loader = loader;
@@ -103,6 +109,7 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
             _serviceProvider = serviceProvider;
             _logger = logger;
             _workspace = workspace;
+            _fileSystem = fileSystem;
         }
 
         public async Task<ContextProcessingResult> GetModelMetadata(string dbContextFullTypeName, ModelType modelTypeSymbol, string areaName)
@@ -127,10 +134,10 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
 
             if (dbContextSymbols.Count == 0)
             {
-                await ValidateEFSqlServerDependency();
+                ValidateEFSqlServerDependency();
 
                 // Create a new Context
-                _logger.LogMessage("Generating a new DbContext class " + dbContextFullTypeName);
+                _logger.LogMessage(string.Format(MessageStrings.GeneratingDbContext, dbContextFullTypeName));
                 var dbContextTemplateModel = new NewDbContextTemplateModel(dbContextFullTypeName, modelTypeSymbol);
                 dbContextSyntaxTree = await _dbContextEditorServices.AddNewContext(dbContextTemplateModel);
                 state = ContextProcessingStatus.ContextAdded;
@@ -152,7 +159,7 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
                     // It's better to throw with a meaningful message
                     throw new InvalidOperationException(string.Format("{0} {1}", MessageStrings.FailedToEditStartup, MessageStrings.EnsureStartupClassExists));
                 }
-                _logger.LogMessage("Attempting to compile the application in memory with the added DbContext");
+                _logger.LogMessage(MessageStrings.CompilingWithAddedDbContext);
 
                 var projectCompilation = _workspace.CurrentSolution.Projects
                     .First(project => project.AssemblyName == _projectContext.AssemblyName)
@@ -195,7 +202,7 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
                 {
                     state = ContextProcessingStatus.ContextEdited;
                     dbContextSyntaxTree = addResult.NewTree;
-                    _logger.LogMessage("Attempting to compile the application in memory with the modified DbContext");
+                    _logger.LogMessage(MessageStrings.CompilingWithModifiedDbContext);
 
                     reflectedTypesProvider = new ReflectedTypesProvider(
                         projectCompilation,
@@ -225,7 +232,7 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
                 }
                 else
                 {
-                    _logger.LogMessage("Attempting to compile the application in memory");
+                    _logger.LogMessage(MessageStrings.CompilingInMemory);
 
                     reflectedTypesProvider = new ReflectedTypesProvider(
                         projectCompilation,
@@ -267,7 +274,7 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
                 throw new InvalidOperationException(string.Format(MessageStrings.ModelTypeNotFound, reflectedStartupType.Name));
             }
 
-            _logger.LogMessage("Attempting to figure out the EntityFramework metadata for the model and DbContext: "+modelTypeSymbol.Name);
+            _logger.LogMessage(string.Format(MessageStrings.GettingEFMetadata, modelTypeSymbol.Name));
 
             var metadata = GetModelMetadata(dbContextType, modelReflectionType, reflectedStartupType);
 
@@ -277,7 +284,7 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
                 PersistSyntaxTree(dbContextSyntaxTree);
                 if (state == ContextProcessingStatus.ContextAdded || state == ContextProcessingStatus.ContextAddedButRequiresConfig)
                 {
-                    _logger.LogMessage("Added DbContext : " + dbContextSyntaxTree.FilePath.Substring(_applicationInfo.ApplicationBasePath.Length));
+                    _logger.LogMessage(string.Format(MessageStrings.AddedDbContext, dbContextSyntaxTree.FilePath.Substring(_applicationInfo.ApplicationBasePath.Length)));
 
                     if (state != ContextProcessingStatus.ContextAddedButRequiresConfig)
                     {
@@ -285,7 +292,7 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
                     }
                     else
                     {
-                        _logger.LogMessage("However there may be additional steps required for the generted code to work properly, refer to documentation <forward_link>.");
+                        _logger.LogMessage(MessageStrings.AdditionalSteps);
                     }
                 }
             }
@@ -328,20 +335,11 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
             return outputPath;
         }
 
-        private async Task ValidateEFSqlServerDependency()
+        private void ValidateEFSqlServerDependency()
         {
             if (_projectContext.GetPackage(EFSqlServerPackageName) == null)
             {
-                await _packageInstaller.InstallPackages(new List<PackageMetadata>()
-                {
-                    new PackageMetadata()
-                    {
-                        Name = EFSqlServerPackageName,
-                        Version = EFSqlServerPackageVersion
-                    }
-                });
-
-                throw new InvalidOperationException(MessageStrings.ScaffoldingNeedsToRerun);
+                throw new InvalidOperationException(MessageStrings.EFSqlServerPackageNotAvailable);
             }
         }
 
@@ -356,15 +354,8 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore
             Debug.Assert(newTree != null);
             Debug.Assert(!String.IsNullOrEmpty(newTree.FilePath));
 
-            Directory.CreateDirectory(Path.GetDirectoryName(newTree.FilePath));
-
-            using (var fileStream = new FileStream(newTree.FilePath, FileMode.OpenOrCreate, FileAccess.Write))
-            {
-                using (var streamWriter = new StreamWriter(stream: fileStream, encoding: Encoding.UTF8))
-                {
-                    newTree.GetText().Write(streamWriter);
-                }
-            }
+            _fileSystem.CreateDirectory(Path.GetDirectoryName(newTree.FilePath));
+            _fileSystem.WriteAllText(newTree.FilePath, newTree.GetText().ToString());
         }
 
         private ModelMetadata GetModelMetadata(Type dbContextType, Type modelType, Type startupType)

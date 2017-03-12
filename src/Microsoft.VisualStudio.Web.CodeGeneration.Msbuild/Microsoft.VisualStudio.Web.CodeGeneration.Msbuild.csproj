@@ -5,24 +5,25 @@
   <PropertyGroup>
     <Description>MSBuild task (EvaluateProjectInfoForCodeGeneration) used by Microsoft.VisualStudio.Web.CodeGeneration.Tools</Description>
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-    <PackageTags>aspnetcore;codegenerator;scaffolding;visualstudioweb</PackageTags>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Shared\General\**\*.cs" />
-    <Compile Include="..\Microsoft.Extensions.ProjectModel.Abstractions.Sources\**\*.cs" />
-    <EmbeddedResource Include="..\Microsoft.Extensions.ProjectModel.Abstractions.Sources\**\*.resx" />
+    <Compile Include="..\Shared\General\*.cs">
+      <Link>Shared\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.VisualStudio.Web.CodeGeneration.Contracts\ProjectModel\*.cs">
+      <Link>Contracts\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="15.1.548" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.1.548" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.548" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="NuGet.Frameworks" Version="4.0.0-*" />
+    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonSoftVersion)" />
+    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetFrameworksVersion)" />
   </ItemGroup>
 
 </Project>

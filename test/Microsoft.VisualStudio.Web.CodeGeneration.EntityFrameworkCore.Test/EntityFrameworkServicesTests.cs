@@ -13,7 +13,7 @@ using Moq;
 using NuGet.Frameworks;
 using Xunit;
 using Xunit.Abstractions;
-using IProjectContext = Microsoft.Extensions.ProjectModel.IProjectContext;
+using IProjectContext = Microsoft.VisualStudio.Web.CodeGeneration.Contracts.ProjectModel.IProjectContext;
 
 namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore.Test
 {
@@ -72,6 +72,7 @@ namespace Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore.Test
                 _packageInstaller.Object,
                 _serviceProvider.Object,
                 _workspace,
+                DefaultFileSystem.Instance,
                 _logger);
 
         }
